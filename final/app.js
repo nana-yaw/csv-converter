@@ -48,7 +48,6 @@ watcher
         if (extension === '.csv') {
                 
             log('Ready to process!');
-            log(stat);
 
             //require the csvtojson converter class 
             var Converter = require("csvtojson").Converter;
@@ -74,25 +73,17 @@ watcher
                     // log our json to verify it has worked
                     log(json);
 
-                    if (json.length < 1) {
-                        
-                        log('File is empty!');
+                    //Logic to add json data to database
 
-                    } else {
-                     
-                        //Logic to add json data to database
-
-                        //Deleting the CSV File after conversion
-                        fs.unlink(path, function (err) {
-                            if (err) {
-                                throw err;
-                                log(err);
-                            } else {
-                                log('The file(' + fileName + ') deleted successfully!');
-                            }
-                        }); //end of delete function
-                    }
-
+                    //Deleting the CSV File after conversion
+                    fs.unlink(path, function (err) {
+                        if (err){
+                            throw err;
+                            log(err);
+                        }else {
+                            log('The file(' + fileName + ') deleted successfully!');
+                        }
+                    }); //end of delete function
                 }
                 
             });
