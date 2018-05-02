@@ -16,6 +16,8 @@ var fs = require('fs');
 
 var chokidar = require('chokidar');
 
+const credentials = require('./credentials.js');
+
 var dirToWatch = './final/';
 
 var fileName;
@@ -50,52 +52,46 @@ watcher
             log('Ready to process!');
             log(stat);
 
-            //require the csvtojson converter class 
-            var Converter = require("csvtojson").Converter;
+            var csv = require('fast-csv');
 
-            // create a new converter object
-            var converter = new Converter({});
+            let csvStream = csv.fromPath(path, { 
+                headers: true,
+                ignoreEmpty:true 
+            })
+                .on("data", function (record) {
+                    //csvStream.pause();
 
-            // csv file as well as a callback function
-            converter.fromFile(path, function (err, result) { 
-                // if an error has occured then handle it
-                if (err) {
-                    
-                    log("An Error Has Occured");
-                    
-                    log(err);
+                    if (csvStream !== null && csvStream !== []) {
+                        
+                        log(record);
+            //             let policyID = record.policyID;
+            //             let statecode = record.statecode;
+            //             let county = record.county;
+            //             let point_latitude = record.point_latitude;
+            //             let point_longitude = record.point_longitude;
+            //             let line = record.line;
+            //             let construction = record.construction;
 
-                } else{
-                    
-                    // create a variable called json and store
-                    // the result of the conversion
-                    var json = result;
-
-                    // log our json to verify it has worked
-                    log(json);
-
-                    if (json.length < 1) {
+            //             pool.query("INSERT INTO FL_insurance_sample(policyID, statecode, county, point_latitude, point_longitude, line, construction) \
+            // VALUES($1, $2, $3, $4, $5, $6, $7)", [policyID, statecode, county, point_latitude, point_longitude, line, construction], function (err) {
+            //                     if (err) {
+            //                         console.log(err);
+            //                     }
+            //                 });
+                        
+                    }else{
                         
                         log('File is empty!');
 
-                    } else {
-                     
-                        //Logic to add json data to database
-
-                        //Deleting the CSV File after conversion
-                        fs.unlink(path, function (err) {
-                            if (err) {
-                                throw err;
-                                log(err);
-                            } else {
-                                log('The file(' + fileName + ') deleted successfully!');
-                            }
-                        }); //end of delete function
                     }
 
-                }
-                
-            });
+                    //csvStream.resume();
+
+                }).on("end", function () {
+                    log("Job is done!");
+                }).on("error", function (err) {
+                    log(err);
+                });
            
         } else {
                

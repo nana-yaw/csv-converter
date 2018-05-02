@@ -5,7 +5,9 @@
   "main": "app.js",
   "dependencies": {
     "chokidar": "^2.0.3",
-    "csvtojson": "^1.1.9"
+    "csvtojson": "^1.1.9",
+    "fast-csv": "^2.4.1",
+    "mysql": "^2.15.0"
   },
   "devDependencies": {},
   "scripts": {
