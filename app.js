@@ -1,5 +1,17 @@
 //1. Watch directory containing .csv files
 
+//2. If the directory is not empty and the file type is ".csv" and not empty
+
+//3. The name of the non-empty file should not match the name as the last file processed
+
+//4. If the above validations are passed, the file is converted into JSON.
+
+//5.If the conversion is successful, JSON data is inserted to a database.
+
+//6. The name of the file is saved or cached.
+
+//7. The file is then deleted.
+
 var fs = require('fs');
 
 var chokidar = require('chokidar');
@@ -86,15 +98,3 @@ watcher
     //.on('change', function (path) { console.log('File', path, 'has been changed'); })
     .on('unlink', function (path) { console.log('File: ', path, ' has been removed'); })
     //.on('error', function (error) { console.error('Error happened', error); })
-
-//2. If the directory is not empty and the file type is ".csv" and not empty
-
-//3. The name of the non-empty file should not match the name as the last file processed
-
-//4. If the above validations are passed, the file is converted into JSON.
-
-//5.If the conversion is successful, JSON data is inserted to a database.
-
-//6. The name of the file is saved or cached.
-
-//7. The file is then deleted.
