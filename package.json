@@ -1,0 +1,24 @@
+{
+  "name": "csv-converter",
+  "version": "1.0.0",
+  "description": "gA node app that watches a particular directory and converts all csv files in the directory to json format.",
+  "main": "app.js",
+  "dependencies": {
+    "chokidar": "^2.0.3",
+    "csvtojson": "^1.1.9"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "\u001b[A\u001b[Bhttps://github.com/nana-yaw/csv-converter.git"
+  },
+  "keywords": [
+    "CSV",
+    "JSON"
+  ],
+  "author": "Edward Osei-Nyatrko\u001b[D\u001b[D\u001b[\u001b[C\u001b[C\u001b[\u001b[1\u001b[C\u001b[rko",
+  "license": "ISC"
+}
