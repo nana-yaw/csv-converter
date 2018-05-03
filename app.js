@@ -31,17 +31,18 @@ var watcher = chokidar.watch(dirToWatch,'file or dir', {
 // Something to use when events are received.
 var log = console.log.bind(console);
 
+log("\n\n\rService has started\n\n\r");
+
 watcher
-    // .on('ready', () => log('Watch has began!\n\rInitial scan complete. Ready for changes'))
     .on('add', function (path,stat) { 
-        
-        log('File: ', path, 'has been added');
        
         var directory = require('path');
         
         var extension = directory.extname(path);
 
         fileName = directory.basename(path);
+
+        log('File: ', fileName, 'has been added');
         
         // log(extension);
 
@@ -82,7 +83,7 @@ watcher
 
                     } else{
                         
-                        console.log(fileName,' is empty!');
+                        log(fileName,' is an empty file!\n\r');
 
                     }
 
@@ -102,23 +103,26 @@ watcher
                         if (err)
                             throw err
                         else {
-                            console.log('Connected to MySQL');
+                            log('Connection is up!');
                         }
                     });
 
                     var sql = "INSERT INTO records (sell, list, living, rooms, beds, baths, age, acres, taxes) VALUES ?";
 
-                    console.time("Query Execution Time");
+                    // console.time("Query Execution Time");
                     connection.query(sql, [allCsvData], function (error, results) {
                         if (error) throw error;
-                        console.timeEnd("Query Execution Time");
-                        console.log("Number of records inserted: " + results.affectedRows);
+                        // console.timeEnd("Query Execution Time");
+                        log("Number of records inserted: " + results.affectedRows);
+                        log("Data saved!");
                     
                     });
 
                         connection.end();
 
-                    log("Job is done!");
+                    fs.unlink(path,function() {
+                        
+                    });
 
                 }).on("error", function (err) {
                     log(err);
@@ -126,12 +130,19 @@ watcher
            
         } else {
                
-            log('Invalid file type!\n\rNothing to do here!');
+            log('Invalid file type!\n\rNothing to do here!\n\r');
             log(stat);
+            
            
         } //end of if/else
 
     })
-    //.on('change', function (path) { console.log('File', path, 'has been changed'); })
-    .on('unlink', function (path) { console.log('File: ', path, ' has been removed'); })
-    //.on('error', function (error) { console.error('Error happened', error); })
+    .on('change', function (path) { log('File', path, 'has been changed'); })
+    .on('unlink', function (path) { 
+        log('File: ', fileName, ' was removed after data was inserted into the database!\n\r');
+        
+    })
+    .on('error', function (error) { console.error('An error occured: ', error,'\n\r'); })
+
+    
+    
