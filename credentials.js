@@ -1,8 +1,8 @@
 var credentials = {
-    user: "root",
-    password: "",
-    host: "127.0.0.1",
-    database: "csv_converter_app"
+    user: "your user name",
+    password: "your password",
+    host: "your host IP, e.g. localhost or 127.0.0.1",
+    database: "your database name"
 }
 
 module.exports = credentials;

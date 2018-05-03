@@ -4,9 +4,9 @@
 
 //3. The name of the non-empty file should not match the name as the last file processed
 
-//4. If the above validations are passed, the file is converted into JSON.
+//4. If the above validations are passed.
 
-//5.If the conversion is successful, JSON data is inserted to a database.
+//5.If the extraction is successful,  data extracted is inserted to a database.
 
 //6. The name of the file is saved or cached.
 
@@ -43,52 +43,83 @@ watcher
 
         fileName = directory.basename(path);
         
-        log(extension);
+        // log(extension);
 
-        log(fileName);
+        // log(fileName);
         
         if (extension === '.csv') {
                 
             log('Ready to process!');
-            log(stat);
+            // log(stat);
 
             var csv = require('fast-csv');
+
+            let allCsvData = [];
 
             let csvStream = csv.fromPath(path, { 
                 headers: true,
                 ignoreEmpty:true 
             })
                 .on("data", function (record) {
-                    //csvStream.pause();
 
-                    if (csvStream !== null && csvStream !== []) {
+                    if (record !== null && record !== " ") {
                         
-                        log(record);
-            //             let policyID = record.policyID;
-            //             let statecode = record.statecode;
-            //             let county = record.county;
-            //             let point_latitude = record.point_latitude;
-            //             let point_longitude = record.point_longitude;
-            //             let line = record.line;
-            //             let construction = record.construction;
+                        // log("Current CSV Data: ",record);
 
-            //             pool.query("INSERT INTO FL_insurance_sample(policyID, statecode, county, point_latitude, point_longitude, line, construction) \
-            // VALUES($1, $2, $3, $4, $5, $6, $7)", [policyID, statecode, county, point_latitude, point_longitude, line, construction], function (err) {
-            //                     if (err) {
-            //                         console.log(err);
-            //                     }
-            //                 });
+                        let sell = record.Sell;
+                        let list = record.List;
+                        let living = record.Living;
+                        let rooms = record.Rooms;
+                        let beds = record.Beds;
+                        let baths = record.Baths;
+                        let age = record.Age;
+                        let acres = record.Acres;
+                        let taxes = record.Taxes;
+
+                        var csvData = [sell, list, living, rooms, beds, baths, age, acres, taxes];
+
+                        allCsvData.push(csvData);
+
+                    } else{
                         
-                    }else{
-                        
-                        log('File is empty!');
+                        console.log(fileName,' is empty!');
 
                     }
 
-                    //csvStream.resume();
-
                 }).on("end", function () {
+
+                    var mysql = require('mysql');
+                    const credentials = require('./credentials.js');
+                    var connection = mysql.createConnection({
+                        host: credentials.host,
+                        user: credentials.user,
+                        password: credentials.password,
+                        database: credentials.database
+                    });
+
+                    //Establish MySQL connection
+                    connection.connect(function (err) {
+                        if (err)
+                            throw err
+                        else {
+                            console.log('Connected to MySQL');
+                        }
+                    });
+
+                    var sql = "INSERT INTO records (sell, list, living, rooms, beds, baths, age, acres, taxes) VALUES ?";
+
+                    console.time("Query Execution Time");
+                    connection.query(sql, [allCsvData], function (error, results) {
+                        if (error) throw error;
+                        console.timeEnd("Query Execution Time");
+                        console.log("Number of records inserted: " + results.affectedRows);
+                    
+                    });
+
+                        connection.end();
+
                     log("Job is done!");
+
                 }).on("error", function (err) {
                     log(err);
                 });
