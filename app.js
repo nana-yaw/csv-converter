@@ -31,7 +31,7 @@ var watcher = chokidar.watch(dirToWatch,'file or dir', {
 // Something to use when events are received.
 var log = console.log.bind(console);
 
-log("\n\n\rService has started\n\n\r");
+log("\n\rService has started...\n\n\r");
 
 watcher
     .on('add', function (path,stat) { 

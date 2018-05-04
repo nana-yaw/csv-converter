@@ -5,7 +5,6 @@
   "main": "app.js",
   "dependencies": {
     "chokidar": "^2.0.3",
-    "csvtojson": "^1.1.9",
     "fast-csv": "^2.4.1",
     "mysql": "^2.15.0"
   },
@@ -21,6 +20,6 @@
     "CSV",
     "JSON"
   ],
-  "author": "Edward Osei-Nyatrko\u001b[D\u001b[D\u001b[\u001b[C\u001b[C\u001b[\u001b[1\u001b[C\u001b[rko",
+  "author": "Edward Osei-Nyarko\u001b[D\u001b[D\u001b[\u001b[C\u001b[C\u001b[\u001b[1\u001b[C\u001b[rko",
   "license": "ISC"
 }
