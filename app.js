@@ -23,7 +23,7 @@ var dirToWatch = './final/';
 var fileName;
 
 // Initialize watcher.
-var watcher = chokidar.watch(dirToWatch,'file or dir', {
+var watcher = chokidar.watch(dirToWatch, 'file or dir', {
     ignored: /(^|[\/\\])\../,
     persistent: true
 });
@@ -34,22 +34,22 @@ var log = console.log.bind(console);
 log("\n\rService has started...\n\n\r");
 
 watcher
-    .on('add', function (path,stat) { 
-       
+    .on('add', function (path, stat) {
+
         var directory = require('path');
-        
+
         var extension = directory.extname(path);
 
         fileName = directory.basename(path);
 
         log('File: ', fileName, 'has been added');
-        
+
         // log(extension);
 
         // log(fileName);
-        
+
         if (extension === '.csv') {
-                
+
             log('Ready to process!');
             // log(stat);
 
@@ -57,14 +57,14 @@ watcher
 
             let allCsvData = [];
 
-            let csvStream = csv.fromPath(path, { 
+            let csvStream = csv.fromPath(path, {
                 headers: true,
-                ignoreEmpty:true 
+                ignoreEmpty: true
             })
                 .on("data", function (record) {
 
                     if (record !== null && record !== " ") {
-                        
+
                         // log("Current CSV Data: ",record);
 
                         let sell = record.Sell;
@@ -81,68 +81,62 @@ watcher
 
                         allCsvData.push(csvData);
 
-                    } else{
-                        
-                        log(fileName,' is an empty file!\n\r');
+                    } else {
+
+                        log(fileName, ' is an empty file!\n\r');
 
                     }
 
                 }).on("end", function () {
 
-                    var mysql = require('mysql');
+                    var mssql = require('mssql');
+                    var Connection = require('tedious').Connection;
                     const credentials = require('./credentials.js');
-                    var connection = mysql.createConnection({
-                        host: credentials.host,
-                        user: credentials.user,
-                        password: credentials.password,
-                        database: credentials.database
+
+                    // var sql = "INSERT INTO records (sell, list, living, rooms, beds, baths, age, acres, taxes) VALUES ?";
+
+                    var connection = new Connection(credentials);
+
+                    // var Request = require('tedious').Request
+                    // var TYPES = require('tedious').TYPES;
+
+                    // optional BulkLoad options
+                    var options = { keepNulls: false };
+
+                    // instantiate - provide the table where you'll be inserting to, options and a callback
+                    var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
+                        log('inserted %d rows: ', rowCount);
                     });
 
-                    //Establish MySQL connection
-                    connection.connect(function (err) {
-                        if (err)
-                            throw err
-                        else {
-                            log('Connection is up!');
-                        }
-                    });
+                    // add rows
+                    bulkLoad.addRow(allCsvData);
 
-                    var sql = "INSERT INTO records (sell, list, living, rooms, beds, baths, age, acres, taxes) VALUES ?";
+                    // execute
+                    connection.execBulkLoad(bulkLoad); 
 
-                    // console.time("Query Execution Time");
-                    connection.query(sql, [allCsvData], function (error, results) {
-                        if (error) throw error;
-                        // console.timeEnd("Query Execution Time");
-                        log("Number of records inserted: " + results.affectedRows);
-                        log("Data saved!");
-                    
-                    });
+                    fs.unlink(path, function () {
 
-                        connection.end();
-
-                    fs.unlink(path,function() {
-                        
                     });
 
                 }).on("error", function (err) {
                     log(err);
                 });
-           
+
         } else {
-               
+
             log('Invalid file type!\n\rNothing to do here!\n\r');
             log(stat);
-            
-           
+
+
         } //end of if/else
 
     })
     .on('change', function (path) { log('File', path, 'has been changed'); })
-    .on('unlink', function (path) { 
-        log('File: ', fileName, ' was removed after data was inserted into the database!\n\r');
-        
-    })
-    .on('error', function (error) { console.error('An error occured: ', error,'\n\r'); })
+    .on('unlink', function (path) {
+        log('File: ', fileName, ' was removed!\n\r');
 
-    
-    
+    })
+    .on('error', function (error) { console.error('An error occured: ', error, '\n\r'); })
+
+
+
