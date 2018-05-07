@@ -1,11 +1,12 @@
 {
   "name": "csv-converter",
   "version": "1.0.0",
-  "description": "gA node app that watches a particular directory and converts all csv files in the directory to json format.",
+  "description": "A node app that watches a particular directory and converts all csv files in the directory to json format.",
   "main": "app.js",
   "dependencies": {
     "chokidar": "^2.0.3",
     "fast-csv": "^2.4.1",
+    "mssql": "^4.1.0",
     "mysql": "^2.15.0"
   },
   "devDependencies": {},
