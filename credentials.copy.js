@@ -1,8 +1,8 @@
 var credentials = {
-    user: "your user name",
-    password: "your password",
-    host: "your host IP, e.g. localhost or 127.0.0.1",
-    database: "your database name"
+    server: 'your server name', // You can use 'localhost\\instance' to connect to named instance
+    database: 'your database name',
+    userName: 'your database username',
+    password: 'your database password'
 }
 
 module.exports = credentials;
