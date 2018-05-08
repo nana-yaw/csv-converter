@@ -4,3 +4,6 @@ mssql.js
 app-linux
 app-macos
 app-win.exe
+.vscode/
+config.js
+final/

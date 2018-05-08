@@ -13,13 +13,13 @@
 //7. The file is then deleted.
 
 var fs = require('fs');
-
 var chokidar = require('chokidar');
+var directory = require('path');
+var csv = require('fast-csv');
 
-const credentials = require('./credentials.js');
+const config = require('./config.js');
 
-var dirToWatch = './final/';
-
+var dirToWatch = config.watchDirectory;
 var fileName;
 
 // Initialize watcher.
@@ -36,7 +36,6 @@ log("\n\rService has started...\n\n\r");
 watcher
     .on('add', function (path, stat) {
 
-        var directory = require('path');
 
         var extension = directory.extname(path);
 
@@ -44,16 +43,11 @@ watcher
 
         log('File: ', fileName, 'has been added');
 
-        // log(extension);
-
-        // log(fileName);
-
         if (extension === '.csv') {
 
             log('Ready to process!');
             // log(stat);
 
-            var csv = require('fast-csv');
 
             let allCsvData = [];
 
@@ -77,7 +71,7 @@ watcher
                         let acres = record.Acres;
                         let taxes = record.Taxes;
 
-                        var csvData = [sell, list, living, rooms, beds, baths, age, acres, taxes];
+                        var csvData = { sell, list, living, rooms, beds, baths, age, acres, taxes };
 
                         allCsvData.push(csvData);
 
@@ -88,41 +82,40 @@ watcher
                     }
 
                 }).on("end", function () {
-
-                    // var mssql = require('mssql');
                     var Connection = require('tedious').Connection;
-                    const credentials = require('./credentials.js');
+                    const credentials = require('./config');
 
                     var connection = new Connection(credentials);
 
-                    connection.on("connect",function (error) {
-                        if (error) 
+                    connection.on("connect", function (error) {
+                        if (error) {
                             throw error;
+                        }
 
                         // optional BulkLoad options
                         var options = { keepNulls: false };
 
                         log("Connected!\n\n\r");
 
-                        // log(allCsvData);
-                        
-
                         // instantiate - provide the table where you'll be inserting to, options and a callback
                         var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
-                            if (error) 
+                            if (error) {
                                 throw error;
+                            }
 
                             // add rows
-                            bulkLoad.addRow(allCsvData);
+                            allCsvData.forEach(function (row) {
+                                bulkLoad.addRow(row);
+                            })
 
                             // execute
                             connection.execBulkLoad(bulkLoad);
 
                             log('inserted rows: ', rowCount);
                         });
-                        
+
                     });
- 
+
                     fs.unlink(path, function () {
 
                     });

@@ -5,4 +5,9 @@ var credentials = {
     password: 'your database password'
 }
 
-module.exports = credentials;
+const watchDirectory = 'directory/to/watch'
+
+module.exports = {
+    credentials,
+    watchDirectory
+};
