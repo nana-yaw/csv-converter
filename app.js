@@ -1,143 +1,68 @@
-//1. Watch directory containing .csv files
+const chokidar = require('chokidar');
+const path = require('path');
+const csv = require('fast-csv');
+const mssql = require('mssql');
 
-//2. If the directory is not empty and the file type is ".csv" and not empty
+const { credentials, watchDirectory } = require('./config');
 
-//3. The name of the non-empty file should not match the name as the last file processed
+mssql
+  .connect(credentials)
+  .then(() => {
+    console.log('DB Connected...');
+    // Initialize watcher.
+    const watcher = chokidar.watch(watchDirectory, 'file or dir', {
+      ignored: /(^|[/\\])\../,
+      persistent: true,
+    });
 
-//4. If the above validations are passed.
+    watcher.on('add', (filePath, stat) => {
+      console.log('File added...');
+      const extension = path.extname(filePath);
 
-//5.If the extraction is successful,  data extracted is inserted to a database.
+      if (extension === '.csv') {
+        console.log('Ready to process...');
 
-//6. The name of the file is saved or cached.
+        const allCSVData = [];
 
-//7. The file is then deleted.
-
-var fs = require('fs');
-var chokidar = require('chokidar');
-var directory = require('path');
-var csv = require('fast-csv');
-
-const config = require('./config.js');
-
-var dirToWatch = config.watchDirectory;
-var fileName;
-
-// Initialize watcher.
-var watcher = chokidar.watch(dirToWatch, 'file or dir', {
-    ignored: /(^|[\/\\])\../,
-    persistent: true
-});
-
-// Something to use when events are received.
-var log = console.log.bind(console);
-
-log("\n\rService has started...\n\n\r");
-
-watcher
-    .on('add', function (path, stat) {
-
-
-        var extension = directory.extname(path);
-
-        fileName = directory.basename(path);
-
-        log('File: ', fileName, 'has been added');
-
-        if (extension === '.csv') {
-
-            log('Ready to process!');
-            // log(stat);
-
-
-            let allCsvData = [];
-
-            let csvStream = csv.fromPath(path, {
-                headers: true,
-                ignoreEmpty: true
-            })
-                .on("data", function (record) {
-
-                    if (record !== null && record !== " ") {
-
-                        // log("Current CSV Data: ",record);
-
-                        let sell = record.Sell;
-                        let list = record.List;
-                        let living = record.Living;
-                        let rooms = record.Rooms;
-                        let beds = record.Beds;
-                        let baths = record.Baths;
-                        let age = record.Age;
-                        let acres = record.Acres;
-                        let taxes = record.Taxes;
-
-                        var csvData = { sell, list, living, rooms, beds, baths, age, acres, taxes };
-
-                        allCsvData.push(csvData);
-
-                    } else {
-
-                        log(fileName, ' is an empty file!\n\r');
-
-                    }
-
-                }).on("end", function () {
-                    var Connection = require('tedious').Connection;
-                    const credentials = require('./config');
-
-                    var connection = new Connection(credentials);
-
-                    connection.on("connect", function (error) {
-                        if (error) {
-                            throw error;
-                        }
-
-                        // optional BulkLoad options
-                        var options = { keepNulls: false };
-
-                        log("Connected!\n\n\r");
-
-                        // instantiate - provide the table where you'll be inserting to, options and a callback
-                        var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
-                            if (error) {
-                                throw error;
-                            }
-
-                            log('inserted rows: ', rowCount);
-                        });
-
-                        allCsvData.forEach(function (row) {
-                            bulkLoad.addRow(row);
-                        })
-
-                        // execute
-                        connection.execBulkLoad(bulkLoad);
-
-                    });
-
-                    fs.unlink(path, function () {
-
-                    });
-
-                }).on("error", function (err) {
-                    log(err);
-                });
-
-        } else {
-
-            log('Invalid file type!\n\rNothing to do here!\n\r');
-            log(stat);
-
-
-        } //end of if/else
-
-    })
-    .on('change', function (path) { log('File', path, 'has been changed'); })
-    .on('unlink', function (path) {
-        log('File: ', fileName, ' was removed!\n\r');
-
-    })
-    .on('error', function (error) { console.error('An error occured: ', error, '\n\r'); })
-
-
+        csv.fromPath(filePath, {
+          headers: true,
+          ignoreEmpty: true,
+          trim: true,
+          objectMode: true,
+        })
+          .on('data', (record) => {
+            // Insert each row as it is parsed
+            if (record && record !== ' ') {
+              // Gets values from object (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Object/values)
+              const csvData = Object.values(record);
+              allCSVData.push(csvData);
+            }
+          })
+          .on('end', () => {
+            const valuesStrings = allCSVData.map(data => `(${data.join(',')})`);
+            const sqlQuery = `
+            INSERT into records (sell,list,living,rooms,beds,baths,age,acres,taxes) values
+              ${valuesStrings.join(',\n')}
+          `;
+            const request = new mssql.Request();
+            request.query(sqlQuery, (err, result) => {
+              if (err) {
+                console.error(err);
+                return process.exit(1);
+              }
+              console.log('File parsed and records inserted');
+              console.log(result);
+              return process.exit(0);
+            });
+          });
+      } else {
+        console.log('Invalid file type!\n\rNothing to do here!\n\r');
+        console.log(stat);
+        process.exit(1);
+      }
+    });
+  }).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 
