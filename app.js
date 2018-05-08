@@ -89,31 +89,40 @@ watcher
 
                 }).on("end", function () {
 
-                    var mssql = require('mssql');
+                    // var mssql = require('mssql');
                     var Connection = require('tedious').Connection;
                     const credentials = require('./credentials.js');
 
-                    // var sql = "INSERT INTO records (sell, list, living, rooms, beds, baths, age, acres, taxes) VALUES ?";
-
                     var connection = new Connection(credentials);
 
-                    // var Request = require('tedious').Request
-                    // var TYPES = require('tedious').TYPES;
+                    connection.on("connect",function (error) {
+                        if (error) 
+                            throw error;
 
-                    // optional BulkLoad options
-                    var options = { keepNulls: false };
+                        // optional BulkLoad options
+                        var options = { keepNulls: false };
 
-                    // instantiate - provide the table where you'll be inserting to, options and a callback
-                    var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
-                        log('inserted %d rows: ', rowCount);
+                        log("Connected!\n\n\r");
+
+                        // log(allCsvData);
+                        
+
+                        // instantiate - provide the table where you'll be inserting to, options and a callback
+                        var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
+                            if (error) 
+                                throw error;
+
+                            // add rows
+                            bulkLoad.addRow(allCsvData);
+
+                            // execute
+                            connection.execBulkLoad(bulkLoad);
+
+                            log('inserted rows: ', rowCount);
+                        });
+                        
                     });
-
-                    // add rows
-                    bulkLoad.addRow(allCsvData);
-
-                    // execute
-                    connection.execBulkLoad(bulkLoad); 
-
+ 
                     fs.unlink(path, function () {
 
                     });
