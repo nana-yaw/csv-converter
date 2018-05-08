@@ -103,16 +103,15 @@ watcher
                                 throw error;
                             }
 
-                            // add rows
-                            allCsvData.forEach(function (row) {
-                                bulkLoad.addRow(row);
-                            })
-
-                            // execute
-                            connection.execBulkLoad(bulkLoad);
-
                             log('inserted rows: ', rowCount);
                         });
+
+                        allCsvData.forEach(function (row) {
+                            bulkLoad.addRow(row);
+                        })
+
+                        // execute
+                        connection.execBulkLoad(bulkLoad);
 
                     });
 
