@@ -77,9 +77,56 @@ watcher
                         let acres = record.Acres;
                         let taxes = record.Taxes;
 
-                        var csvData = [sell, list, living, rooms, beds, baths, age, acres, taxes];
+                        var csvData = {
+                                        "sell":sell, 
+                                        "list":list,
+                                        "living":living,
+                                        "rooms":rooms,
+                                        "beds":beds,
+                                        "baths":baths,
+                                        "age":age,
+                                        "acres":acres,
+                                        "taxes":taxes
+                                    };
 
-                        allCsvData.push(csvData);
+                        // log(csvData);
+
+                        // allCsvData.push(csvData);
+
+                        var Connection = require('tedious').Connection;
+                        const credentials = require('./credentials.js');
+
+                        var connection = new Connection(credentials);
+
+                        connection.on("connect", function (error) {
+                            if (error)
+                                throw error;
+
+                            // optional BulkLoad options
+                            var options = { keepNulls: false };
+
+                            // log("Connected!\n\n\r");
+
+                            // log(allCsvData);
+
+
+                            // instantiate - provide the table where you'll be inserting to, options and a callback
+                            var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
+                                // if (error) 
+                                //     {throw error;}
+
+                                log('inserted rows: ', rowCount);
+                            });
+
+                            // log(allCsvData);
+
+                            // add row
+                            bulkLoad.addRow(csvData);
+
+                            // execute
+                            connection.execBulkLoad(bulkLoad);
+
+                        });
 
                     } else {
 
@@ -90,38 +137,6 @@ watcher
                 }).on("end", function () {
 
                     // var mssql = require('mssql');
-                    var Connection = require('tedious').Connection;
-                    const credentials = require('./credentials.js');
-
-                    var connection = new Connection(credentials);
-
-                    connection.on("connect",function (error) {
-                        if (error) 
-                            throw error;
-
-                        // optional BulkLoad options
-                        var options = { keepNulls: false };
-
-                        log("Connected!\n\n\r");
-
-                        // log(allCsvData);
-                        
-
-                        // instantiate - provide the table where you'll be inserting to, options and a callback
-                        var bulkLoad = connection.newBulkLoad('records', options, function (error, rowCount) {
-                            if (error) 
-                                throw error;
-
-                            // add rows
-                            bulkLoad.addRow(allCsvData);
-
-                            // execute
-                            connection.execBulkLoad(bulkLoad);
-
-                            log('inserted rows: ', rowCount);
-                        });
-                        
-                    });
  
                     fs.unlink(path, function () {
 
