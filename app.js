@@ -1,14 +1,16 @@
+var fs = require('fs');
 const chokidar = require('chokidar');
 const path = require('path');
 const csv = require('fast-csv');
 const mssql = require('mssql');
 
-const { credentials, watchDirectory } = require('./config');
+const { credentials, watchDirectory } = require('./config.js');
 
 mssql
   .connect(credentials)
   .then(() => {
-    console.log('DB Connected...');
+    console.log("The service has started...\n\n\r");
+    console.log('DB Connected...\n\r');
     // Initialize watcher.
     const watcher = chokidar.watch(watchDirectory, 'file or dir', {
       ignored: /(^|[/\\])\../,
@@ -16,11 +18,11 @@ mssql
     });
 
     watcher.on('add', (filePath, stat) => {
-      console.log('File added...');
+        console.log('File added...\n\r');
       const extension = path.extname(filePath);
 
       if (extension === '.csv') {
-        console.log('Ready to process...');
+          console.log('CSV file identified!\n\n Ready to process...\n\r');
 
         const allCSVData = [];
 
@@ -50,19 +52,25 @@ mssql
                 console.error(err);
                 return process.exit(1);
               }
-              console.log('File parsed and records inserted');
-              console.log(result);
-              return process.exit(0);
+              console.log('File parsed and records inserted!\n\rAffected rows: ',result.rowsAffected,'\n\n\r');
+            //   console.log(result);
+            //   return process.exit(0);
+                fs.unlink(filePath, function () {
+                    console.log(filePath, ' removed!\n\r');
+                    console.log("The service is still running...\n\n\r");
+                });
             });
           });
       } else {
-        console.log('Invalid file type!\n\rNothing to do here!\n\r');
-        console.log(stat);
-        process.exit(1);
+        console.log('Unsupported file type!\n\rNothing to do here!\n\r');
+        console.log(stat,'\n\n\r');
+        console.log("The service is still running...");
+        // process.exit(1);
       }
     });
   }).catch((err) => {
-    console.error(err);
+    console.error(err,'\n\n\r');
+    console.log("The service will exit due to error!");
     process.exit(1);
   });
 
