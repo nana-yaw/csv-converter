@@ -1,4 +1,4 @@
-# csv-MSSQL DB-parser 
+# csv-MSSQL-DB-parser 
 A node app that watches a particular directory and parses extracted data from the CSV file to a MSSQL database.
 
 After cloning the repo change directory into the repo root path.
